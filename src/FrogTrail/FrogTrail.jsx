@@ -108,7 +108,7 @@ function drawFrog(context, x, y, size, direction, opacity, tilt = 0) {
  * @param {TrailStamp} stamp
  * @param {number} age
  */
-function drawTrailCard(context, stamp, age) {
+function drawTrailCard(context, stamp, age, frogCache) {
   const fade = 1 - age
   const width = stamp.size * 0.82
   const height = stamp.size * 1.02
@@ -125,16 +125,10 @@ function drawTrailCard(context, stamp, age) {
   context.fillStyle = '#fffdf6'
   context.strokeStyle = '#7baa5b'
   context.lineWidth = 1.5
-  context.shadowColor = 'rgba(17, 39, 22, 0.14)'
-  context.shadowBlur = 18 * fade
-  context.shadowOffsetY = 8 * fade
 
   drawRoundedRect(context, -width / 2, -height / 2, width, height, width * 0.12)
   context.fill()
   context.stroke()
-
-  context.shadowBlur = 0
-  context.shadowOffsetY = 0
 
   context.fillStyle = 'rgba(90, 137, 59, 0.82)'
   context.beginPath()
@@ -142,7 +136,13 @@ function drawTrailCard(context, stamp, age) {
   context.arc(width * 0.26, height * 0.29, width * 0.06, 0, Math.PI * 2)
   context.fill()
 
-  drawFrog(context, 0, 2, width * 0.6, stamp.direction, 0.94)
+  const cached = frogCache[stamp.direction === 1 ? 'right' : 'left']
+  const scale = (width * 0.6) / cached.frogSize
+  const half = cached.center * scale
+  const prevAlpha = context.globalAlpha
+  context.globalAlpha *= 0.94
+  context.drawImage(cached.canvas, -half, 2 - half, cached.canvasSize * scale, cached.canvasSize * scale)
+  context.globalAlpha = prevAlpha
   context.restore()
 }
 
@@ -178,6 +178,19 @@ function FrogTrail() {
       return undefined
     }
 
+    const preRenderFrog = (direction) => {
+      const frogSize = 40
+      const padding = Math.ceil(frogSize * 0.5)
+      const canvasSize = frogSize * 2 + padding * 2
+      const offscreen = document.createElement('canvas')
+      offscreen.width = canvasSize
+      offscreen.height = canvasSize
+      const ctx = offscreen.getContext('2d')
+      drawFrog(ctx, canvasSize / 2, canvasSize / 2, frogSize, direction, 1)
+      return { canvas: offscreen, frogSize, center: canvasSize / 2, canvasSize }
+    }
+    const frogCache = { right: preRenderFrog(1), left: preRenderFrog(-1) }
+
     const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
     let prefersReducedMotion = motionQuery.matches
     let animationFrameId = 0
@@ -199,7 +212,7 @@ function FrogTrail() {
     const margin = FROG_SIZE * 0.9
 
     const resizeCanvas = () => {
-      const devicePixelRatio = window.devicePixelRatio || 1
+      const devicePixelRatio = Math.min(window.devicePixelRatio || 1, 2)
 
       viewportWidth = window.innerWidth
       viewportHeight = window.innerHeight
@@ -288,11 +301,15 @@ function FrogTrail() {
         }
       }
 
-      trail = trail.filter((stamp) => timestamp - stamp.bornAt < TRAIL_DURATION)
+      let expireCount = 0
+      while (expireCount < trail.length && timestamp - trail[expireCount].bornAt >= TRAIL_DURATION) {
+        expireCount++
+      }
+      if (expireCount > 0) trail.splice(0, expireCount)
       context.clearRect(0, 0, viewportWidth, viewportHeight)
 
       for (const stamp of trail) {
-        drawTrailCard(context, stamp, (timestamp - stamp.bornAt) / TRAIL_DURATION)
+        drawTrailCard(context, stamp, (timestamp - stamp.bornAt) / TRAIL_DURATION, frogCache)
       }
 
       for (let i = 0; i < frogs.length; i++) {
