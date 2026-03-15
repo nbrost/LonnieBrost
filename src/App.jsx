@@ -27,6 +27,7 @@ function App() {
           fallDelay: Math.random() * fallDuration,
           fallDuration,
           spinDuration: 20 + Math.random() * 16,
+          startRotation: Math.floor(Math.random() * 360),
           size: 62 + Math.random() * 70,
           opacity: 0.22 + Math.random() * 0.22,
         }
@@ -55,6 +56,7 @@ function App() {
               '--drop-fall-duration': `${drop.fallDuration}s`,
               '--drop-spin-delay': `${Math.random() * drop.spinDuration}s`,
               '--drop-spin-duration': `${drop.spinDuration}s`,
+              '--drop-start-rotation': `${drop.startRotation}deg`,
               '--drop-size': `${drop.size}px`,
               '--drop-opacity': `${drop.opacity}`,
             }}
