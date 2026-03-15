@@ -1,36 +1,104 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import { useEffect, useMemo, useState } from 'react'
 import './App.css'
-import FrogTrail from './FrogTrail/FrogTrail'
+import btf from './assets/btf.png'
+import voluptuousAmphibian from './assets/VoluptuousAmphibian.png'
+
+const TOTAL_RAIN_DROPS = 16
+const RAIN_START_DELAY_MS = 6000
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [visibleDropCount, setVisibleDropCount] = useState(0)
+
+  const menuLinks = [
+    { label: 'Home', href: '/' },
+    { label: 'Snake', href: '/snake' },
+    { label: 'Frogger', href: '/frogger' },
+    { label: 'Links', href: '/links' },
+  ]
+
+  const rainDrops = useMemo(
+    () =>
+      Array.from({ length: TOTAL_RAIN_DROPS }, (_, index) => {
+        const fallDuration = 14 + Math.random() * 8
+        return {
+          id: index,
+          left: Math.random() * 100,
+          fallDelay: Math.random() * fallDuration,
+          fallDuration,
+          spinDuration: 20 + Math.random() * 16,
+          size: 62 + Math.random() * 70,
+          opacity: 0.22 + Math.random() * 0.22,
+        }
+      }),
+    [],
+  )
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      setVisibleDropCount(rainDrops.length)
+    }, RAIN_START_DELAY_MS)
+
+    return () => window.clearTimeout(timeoutId)
+  }, [rainDrops.length])
 
   return (
-    <>
-      <FrogTrail />
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <div className="landing-page">
+      <div className="rain-layer" aria-hidden="true">
+        {rainDrops.slice(0, visibleDropCount).map((drop) => (
+          <div
+            key={drop.id}
+            className="rain-drop-track"
+            style={{
+              '--drop-left': `${drop.left}%`,
+              '--drop-fall-delay': `${drop.fallDelay}s`,
+              '--drop-fall-duration': `${drop.fallDuration}s`,
+              '--drop-spin-delay': `${Math.random() * drop.spinDuration}s`,
+              '--drop-spin-duration': `${drop.spinDuration}s`,
+              '--drop-size': `${drop.size}px`,
+              '--drop-opacity': `${drop.opacity}`,
+            }}
+          >
+            <img src={btf} alt="" className="rain-drop" />
+          </div>
+        ))}
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
+
+      <header className="top-nav">
+        <a className="brand" href="/">
+          LonnieBrost
+        </a>
+
+        <button
+          className={`hamburger ${isMenuOpen ? 'open' : ''}`}
+          type="button"
+          aria-expanded={isMenuOpen}
+          aria-controls="site-menu"
+          aria-label="Toggle navigation menu"
+          onClick={() => setIsMenuOpen((open) => !open)}
+        >
+          <span />
+          <span />
+          <span />
         </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+
+        <nav id="site-menu" className={`menu ${isMenuOpen ? 'open' : ''}`}>
+          {menuLinks.map((link) => (
+            <a key={link.label} href={link.href} onClick={() => setIsMenuOpen(false)}>
+              {link.label}
+            </a>
+          ))}
+        </nav>
+      </header>
+
+      <main className="hero-content">
+        <img
+          src={voluptuousAmphibian}
+          className="hero-image"
+          alt="Voluptuous Amphibian front and center"
+        />
+      </main>
+    </div>
   )
 }
 
