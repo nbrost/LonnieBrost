@@ -121,6 +121,8 @@ function drawSprite(ctx, image, x, y, angle, fallbackColor) {
   const inset = 2
   const size = CELL - inset * 2
 
+  ctx.filter = 'brightness(1.5) saturate(1.5)'
+
   ctx.save()
   ctx.translate(x + CELL / 2, y + CELL / 2)
   ctx.rotate(angle)

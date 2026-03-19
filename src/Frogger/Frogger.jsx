@@ -217,7 +217,9 @@ function drawFrogSprite(ctx, imgs, x, y, dir, alpha, spriteKey = 'frog') {
 
   const img = imgs[spriteKey]
   if (img) {
+    if (spriteKey === 'frog') ctx.filter = 'brightness(1.5) saturate(1.5)'
     ctx.drawImage(img, -CELL / 2 + 3, -CELL / 2 + 3, CELL - 6, CELL - 6)
+    ctx.filter = 'none'
   } else {
     // Simple drawn frog (replaced once frog.png is added)
     ctx.fillStyle = '#3a6e25'
