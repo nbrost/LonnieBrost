@@ -7,6 +7,8 @@ import busImg from '../assets/bus.png'
 import redCarImg from '../assets/red_car.png'
 import blueCarImg from '../assets/blue_car.png'
 import trainImg from '../assets/train.png'
+import splatSrc from '../assets/splat.m4a'
+import underWaterSrc from '../assets/under_water.m4a'
 import styles from './Frogger.module.css'
 
 // ── Constants ────────────────────────────────────────────────────────────────
@@ -105,6 +107,8 @@ function makeGameState() {
     score:  0,
     phase:  'playing',   // 'playing' | 'dead' | 'complete' | 'gameover'
     deadMs: 0,
+    deathCause: null,
+    playDeathSound: false,
     topRow: ROWS - 1,
   }
 }
@@ -122,10 +126,12 @@ function hitsVehicle(frogX, m) {
   return fl < m.x + m.cellW * CELL && fr > m.x
 }
 
-function die(gs) {
+function die(gs, cause = 'splat') {
   gs.lives -= 1
   gs.phase  = 'dead'
   gs.deadMs = 1400
+  gs.deathCause = cause
+  gs.playDeathSound = true
 }
 
 // ── Update ────────────────────────────────────────────────────────────────────
@@ -137,6 +143,7 @@ function updateGameState(gs, dt) {
       gs.frog   = makeFrog()
       gs.topRow = ROWS - 1
       gs.phase  = 'playing'
+      gs.deathCause = null
     }
     return
   }
@@ -161,9 +168,13 @@ function updateGameState(gs, dt) {
     const log  = findLog(lane, frog.x)
     if (log) {
       frog.x += lane.dir * lane.speed * dt
-      if (frog.x < -CELL * 0.5 || frog.x > W - CELL * 0.5) { die(gs); return }
+      if (frog.x < -CELL * 0.5 || frog.x > W - CELL * 0.5) {
+        die(gs, 'under_water')
+        return
+      }
     } else {
-      die(gs); return
+      die(gs, 'under_water')
+      return
     }
   }
 
@@ -171,7 +182,10 @@ function updateGameState(gs, dt) {
   if (frog.row >= 7 && frog.row <= 11) {
     const lane = gs.lanes[frog.row]
     for (const m of lane.movers) {
-      if (hitsVehicle(frog.x, m)) { die(gs); return }
+      if (hitsVehicle(frog.x, m)) {
+        die(gs, m.sprite === 'bus' ? 'splat' : 'splat')
+        return
+      }
     }
   }
 }
@@ -276,9 +290,63 @@ function drawGame(ctx, gs, imgs) {
 // ── Component ─────────────────────────────────────────────────────────────────
 export default function Frogger() {
   const canvasRef = useRef(null)
-  const gsRef     = useRef(makeGameState())
-  const imgsRef   = useRef({})
+  const gsRef = useRef(makeGameState())
+  const imgsRef = useRef({})
+  const audioContextRef = useRef(null)
+  const soundBuffersRef = useRef({ splat: null, under_water: null })
   const [hud, setHud] = useState({ score: 0, lives: LIVES_START, phase: 'playing' })
+
+  const getAudioContext = useCallback(() => {
+    if (audioContextRef.current) {
+      return audioContextRef.current
+    }
+
+    const AudioContextCtor = window.AudioContext || window.webkitAudioContext
+    if (!AudioContextCtor) {
+      return null
+    }
+
+    const context = new AudioContextCtor()
+    audioContextRef.current = context
+    return context
+  }, [])
+
+  const unlockSounds = useCallback(async () => {
+    const context = getAudioContext()
+    if (!context) return
+
+    if (context.state === 'suspended') {
+      try {
+        await context.resume()
+      } catch {
+        // ignore
+      }
+    }
+  }, [getAudioContext])
+
+  const playSound = useCallback(async (name) => {
+    if (!name) return
+
+    const context = getAudioContext()
+    const buffer = soundBuffersRef.current[name]
+
+    if (!context || !buffer) {
+      return
+    }
+
+    if (context.state !== 'running') {
+      try {
+        await context.resume()
+      } catch {
+        return
+      }
+    }
+
+    const source = context.createBufferSource()
+    source.buffer = buffer
+    source.connect(context.destination)
+    source.start(0)
+  }, [getAudioContext])
 
   useEffect(() => {
     const imgs = imgsRef.current
@@ -291,9 +359,66 @@ export default function Frogger() {
     })
   }, [])
 
+  useEffect(() => {
+    let isDisposed = false
+    const context = getAudioContext()
+
+    if (!context) {
+      return undefined
+    }
+
+    const loadSound = async (key, src) => {
+      try {
+        const response = await fetch(src)
+        if (!response.ok) {
+          throw new Error(`Failed to load sound: ${src}`)
+        }
+
+        const arrayBuffer = await response.arrayBuffer()
+        const audioBuffer = await context.decodeAudioData(arrayBuffer.slice(0))
+
+        if (!isDisposed) {
+          soundBuffersRef.current[key] = audioBuffer
+        }
+      } catch {
+        if (!isDisposed) {
+          soundBuffersRef.current[key] = null
+        }
+      }
+    }
+
+    loadSound('splat', splatSrc)
+    loadSound('under_water', underWaterSrc)
+
+    return () => {
+      isDisposed = true
+      soundBuffersRef.current = { splat: null, under_water: null }
+      if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
+        audioContextRef.current.close().catch(() => {})
+      }
+      audioContextRef.current = null
+    }
+  }, [getAudioContext])
+
+  useEffect(() => {
+    const unlock = () => {
+      unlockSounds()
+    }
+
+    window.addEventListener('pointerdown', unlock)
+    window.addEventListener('keydown', unlock)
+
+    return () => {
+      window.removeEventListener('pointerdown', unlock)
+      window.removeEventListener('keydown', unlock)
+    }
+  }, [unlockSounds])
+
   // ── Directional input (shared by keyboard + D-pad) ──────────────────────────
   const handleDirection = useCallback((dir) => {
     const gs = gsRef.current
+
+    unlockSounds()
 
     // Any key after game-end restarts
     if (gs.phase === 'complete' || gs.phase === 'gameover') {
@@ -326,7 +451,7 @@ export default function Frogger() {
             gs.topRow = ROWS - 1
           }
         } else {
-          die(gs)
+          die(gs, 'splat')
         }
       }
     }
@@ -334,7 +459,7 @@ export default function Frogger() {
     if (dir === 'down'  && frog.row < ROWS - 1) frog.row += 1
     if (dir === 'left')  frog.x = Math.max(0,                 frog.x - CELL)
     if (dir === 'right') frog.x = Math.min((COLS - 1) * CELL, frog.x + CELL)
-  }, [])
+  }, [unlockSounds])
 
   // ── Keyboard listener ────────────────────────────────────────────────────────
   useEffect(() => {
@@ -361,20 +486,29 @@ export default function Frogger() {
     const loop = (ts) => {
       const dt = prev ? Math.min((ts - prev) / 1000, 0.05) : 0
       prev = ts
+
       updateGameState(gsRef.current, dt)
+
+      if (gsRef.current.playDeathSound && gsRef.current.deathCause) {
+        playSound(gsRef.current.deathCause)
+        gsRef.current.playDeathSound = false
+      }
+
       drawGame(ctx, gsRef.current, imgsRef.current)
+
       const { score, lives, phase } = gsRef.current
       setHud(h =>
         h.score === score && h.lives === lives && h.phase === phase
           ? h
           : { score, lives, phase },
       )
+
       rafId = requestAnimationFrame(loop)
     }
 
     rafId = requestAnimationFrame(loop)
     return () => cancelAnimationFrame(rafId)
-  }, [])
+  }, [playSound])
 
   return (
     <div className={styles.page}>
