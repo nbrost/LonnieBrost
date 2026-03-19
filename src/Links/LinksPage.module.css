@@ -64,13 +64,10 @@
   width: 74px;
   aspect-ratio: 1 / 1;
   border-radius: 999px;
-  display: grid;
-  place-items: center;
-  font-size: 1.35rem;
-  font-weight: 800;
-  color: #133822;
-  background: linear-gradient(145deg, #cce7c2, #f0e8bb);
   border: 2px solid rgba(31, 59, 41, 0.28);
+  object-fit: cover;
+  object-position: center;
+  background: linear-gradient(145deg, #cce7c2, #f0e8bb);
 }
 
 .displayName {
@@ -120,9 +117,13 @@
   display: grid;
   place-items: center;
   color: #ffffff;
-  font-size: 0.92rem;
-  font-weight: 800;
+  font-size: 1rem;
   background: var(--accent);
+}
+
+.badge svg {
+  width: 1rem;
+  height: 1rem;
 }
 
 .platform {
