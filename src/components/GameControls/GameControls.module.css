@@ -1,0 +1,45 @@
+/**
+ * Reusable D-pad styles.
+ * Drop <GameControls onDirection={fn} /> into any game that needs
+ * on-screen directional input (touch or mouse).
+ */
+
+.dpad {
+  display: grid;
+  grid-template-areas:
+    '.    up    .'
+    'left .     right'
+    '.    down  .';
+  grid-template-columns: repeat(3, 3.8rem);
+  grid-template-rows: repeat(3, 3.8rem);
+  gap: 0.3rem;
+  user-select: none;
+  touch-action: none;
+}
+
+.btn {
+  border: 2px solid rgba(255, 255, 255, 0.22);
+  border-radius: 0.55rem;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 1.35rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    background 0.1s,
+    transform 0.07s;
+  -webkit-tap-highlight-color: transparent;
+  padding: 0;
+}
+
+.btn:active {
+  background: rgba(255, 255, 255, 0.32);
+  transform: scale(0.92);
+}
+
+.up    { grid-area: up; }
+.left  { grid-area: left; }
+.right { grid-area: right; }
+.down  { grid-area: down; }

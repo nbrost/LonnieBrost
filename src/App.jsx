@@ -1,12 +1,14 @@
 import { useEffect, useMemo, useState } from 'react'
+import { Route, Routes } from 'react-router-dom'
 import './App.css'
 import btf from './assets/btf.png'
 import voluptuousAmphibian from './assets/VoluptuousAmphibian.png'
+import Frogger from './Frogger/Frogger'
 
 const TOTAL_RAIN_DROPS = 16
 const RAIN_START_DELAY_MS = 6000
 
-function App() {
+function LandingPage() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [visibleDropCount, setVisibleDropCount] = useState(0)
 
@@ -101,6 +103,15 @@ function App() {
         />
       </main>
     </div>
+  )
+}
+
+function App() {
+  return (
+    <Routes>
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/frogger" element={<Frogger />} />
+    </Routes>
   )
 }
 

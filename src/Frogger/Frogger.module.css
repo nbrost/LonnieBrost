@@ -1,0 +1,101 @@
+.page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: #111827;
+  color: #e0ffe0;
+  padding-bottom: 2rem;
+}
+
+.header {
+  width: 100%;
+  max-width: 676px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  gap: 1rem;
+}
+
+.back {
+  color: #6ee36e;
+  font-weight: 700;
+  text-decoration: none;
+  font-size: 0.95rem;
+  letter-spacing: 0.02em;
+}
+
+.back:hover {
+  color: #a8f0a8;
+}
+
+.score {
+  font-family: 'Courier New', monospace;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #ffd83d;
+}
+
+.lives {
+  font-size: 1.3rem;
+  letter-spacing: 0.08em;
+}
+
+.canvasWrap {
+  position: relative;
+  width: min(100vw, 676px);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.78);
+  gap: 0.6rem;
+  text-align: center;
+  padding: 1.5rem;
+}
+
+.overlay p {
+  margin: 0;
+  font-size: 1.8rem;
+  font-weight: 700;
+  font-family: 'Courier New', monospace;
+}
+
+.finalScore {
+  font-size: 1.4rem !important;
+  color: #ffd83d;
+}
+
+.hint {
+  font-size: 0.8rem !important;
+  color: #9ca3af;
+  font-weight: 400 !important;
+}
+
+.controls {
+  margin-top: 1.25rem;
+}
+
+/* Hide D-pad on devices with a precise pointer (desktop mouse) */
+@media (pointer: fine) {
+  .controls {
+    display: none;
+  }
+}
