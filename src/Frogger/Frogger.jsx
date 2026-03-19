@@ -388,7 +388,7 @@ export default function Frogger() {
         <canvas ref={canvasRef} width={W} height={H} className={styles.canvas} />
         {(hud.phase === 'complete' || hud.phase === 'gameover') && (
           <div className={styles.overlay}>
-            <p>{hud.phase === 'complete' ? "You're the Biggest Titty Frog Around!" : '💀 Game Over'}</p>
+            <p>{hud.phase === 'complete' ? "You're the Biggest Titty Frog Around!" : '💀 Tough Titties, Game Over'}</p>
             <p className={styles.finalScore}>Score: {hud.score}</p>
             <p className={styles.hint}>Press any key or tap a button to play again</p>
           </div>

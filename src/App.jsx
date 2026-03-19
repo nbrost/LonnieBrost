@@ -6,6 +6,7 @@ import voluptuousAmphibian from './assets/VoluptuousAmphibian.png'
 import Frogger from './Frogger/Frogger'
 import LinksPage from './Links/LinksPage'
 import SocialMissingPage from './Links/SocialMissingPage'
+import Snake from './Snake/Snake'
 
 const TOTAL_RAIN_DROPS = 16
 const RAIN_START_DELAY_MS = 6000
@@ -112,6 +113,7 @@ function App() {
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />
+      <Route path="/snake" element={<Snake />} />
       <Route path="/frogger" element={<Frogger />} />
       <Route path="/links" element={<LinksPage />} />
       <Route path="/links/no-account/:platform" element={<SocialMissingPage />} />
