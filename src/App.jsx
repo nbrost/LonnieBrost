@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Route, Routes } from 'react-router-dom'
+import { Link, Route, Routes } from 'react-router-dom'
 import './App.css'
 import btf from './assets/btf.png'
 import voluptuousAmphibian from './assets/VoluptuousAmphibian.png'
 import Frogger from './Frogger/Frogger'
+import LinksPage from './Links/LinksPage'
 
 const TOTAL_RAIN_DROPS = 16
 const RAIN_START_DELAY_MS = 6000
@@ -69,9 +70,9 @@ function LandingPage() {
       </div>
 
       <header className="top-nav">
-        <a className="brand" href="/">
+        <Link className="brand" to="/">
           LonnieBrost
-        </a>
+        </Link>
 
         <button
           className={`hamburger ${isMenuOpen ? 'open' : ''}`}
@@ -88,9 +89,9 @@ function LandingPage() {
 
         <nav id="site-menu" className={`menu ${isMenuOpen ? 'open' : ''}`}>
           {menuLinks.map((link) => (
-            <a key={link.label} href={link.href} onClick={() => setIsMenuOpen(false)}>
+            <Link key={link.label} to={link.href} onClick={() => setIsMenuOpen(false)}>
               {link.label}
-            </a>
+            </Link>
           ))}
         </nav>
       </header>
@@ -111,6 +112,7 @@ function App() {
     <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/frogger" element={<Frogger />} />
+      <Route path="/links" element={<LinksPage />} />
     </Routes>
   )
 }
